@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generatore postAllIn</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --success-hover: #059669;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --terminal-bg: #0f172a;
+            --terminal-header: #1e293b;
+            --terminal-text: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Layout */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 350px 1fr;
+                align-items: start;
+            }
+        }
+
+        /* Sezione Input */
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .help-text {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border: 1px dashed var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-color);
+            cursor: pointer;
+        }
+        
+        input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: var(--border);
+            color: var(--text-main);
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Pulsanti */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -2px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #downloadArea {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.1s ease-out;
+        }
+
+        /* Terminale */
+        .terminal-wrapper {
+            background-color: var(--terminal-bg);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 8rem);
+            min-height: 400px;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .terminal-header {
+            background-color: var(--terminal-header);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .terminal-title {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            background-color: transparent;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-small:hover {
+            background-color: #334155;
+            color: white;
+        }
+
+        #logArea {
+            flex: 1;
+            width: 100%;
+            background-color: transparent;
+            color: var(--terminal-text);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            padding: 1.25rem;
+            border: none;
+            resize: none;
+            outline: none;
+            line-height: 1.4;
+        }
+        
+        #logArea::selection {
+            background-color: rgba(16, 185, 129, 0.3);
+        }
+
+        svg {
+            width: 1.25em;
+            height: 1.25em;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-title">
+    <h1>Generatore postAllIn</h1>
+    <p>Strumento non ufficiale - testing in corso</p>
+</div>
+
+<div class="layout-grid">
+    
+    <!-- Colonna Sinistra: Input e Controlli -->
+    <div class="config-panel">
+        
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <span class="step-title">Elenco tesserati FSI</span>
+            </div>
+            <span class="help-text">Obbligatorio (elenco_tesserati.csv)</span>
+            <input type="file" id="elencoFile" accept=".csv" required>
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <span class="step-title">File Vega</span>
+            </div>
+            <span class="help-text">Obbligatorio (aaaa_mm_vega.csv)</span>
+            <input type="file" id="vegaFile" accept=".csv" required>
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <span class="step-title">Abbinamenti manuali <span class="optional">(opzionale)</span></span>
+            </div>
+            <span class="help-text">File CSV fornito dall'arbitro</span>
+            <input type="file" id="manualiFile" accept=".csv">
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">4</span>
+                <span class="step-title">Lista giocatori FIDE</span>
+            </div>
+            <span class="help-text">Obbligatorio (players_list.txt)</span>
+            <input type="file" id="fideFile" accept=".txt" required>
+        </div>
+
+        <button id="processBtn" class="btn btn-primary" onclick="processAll()">
+            <svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            Elabora dati
+        </button>
+        
+        <!-- Barra di avanzamento -->
+        <div id="progressWrapper" class="progress-wrapper">
+            <div class="progress-header">
+                <span>Stato avanzamento</span>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div id="downloadArea">
+            <a id="downloadLink" class="btn btn-success">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Scarica allin.csv
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Colonna Destra: Log -->
+    <div class="terminal-wrapper">
+        <div class="terminal-header">
+            <div class="terminal-title">
+                <svg viewBox="0 0 24 24" style="width: 1em; height: 1em;"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                Log
+            </div>
+            <button class="btn-small" onclick="downloadLogs()">
+                <svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Scarica log
+            </button>
+        </div>
+        <textarea id="logArea" readonly spellcheck="false">In attesa di avviare l'elaborazione...</textarea>
+    </div>
+
+</div>
+
+<script>
+    // --------------------------------------------------------------------------
+    // CONFIGURAZIONE
+    // --------------------------------------------------------------------------
+    const DELIM_OUT = ";";
+    const ANNO_PIVOT = 26;
+    const INCLUDI_SOCIETA_ESTESA = true;
+
+    const REGIONE_TO_SIGLA = {
+        "ABRUZZO": "ABR", "ALTO ADIGE": "AAD", "BASILICATA": "BAS",
+        "CALABRIA": "CAL", "CAMPANIA": "CAM", "EMILIA ROMAGNA": "EMR",
+        "ESTERO": "EST", "FRIULI VENEZIA G.": "FVG", "FRIULI VENEZIA GIULIA": "FVG",
+        "LAZIO": "LAZ", "LIGURIA": "LIG", "LOMBARDIA": "LOM", "MARCHE": "MAR",
+        "MOLISE": "MOL", "PIEMONTE": "PIE", "PUGLIA": "PUG", "SARDEGNA": "SAR",
+        "SICILIA": "SIC", "TOSCANA": "TOS", "TRENTINO": "TRE", "UMBRIA": "UMB",
+        "VALLE D'AOSTA": "VDA", "VENETO": "VEN", "": ""
+    };
+
+    const ALLIN_COLUMNS = [
+        "Cognome e Nome", "Elo", "Categoria", "K Italia", "Federazione FIDE",
+        "Anno di nascita", "ID FSI", "Sesso", "ID FIDE", "Elo FIDE Standard",
+        "K Elo FIDE Standard", "N. Partite Elo FIDE Standard", "Elo Rapid FIDE",
+        "K Elo Rapid FIDE", "N. Partite Elo Rapid FIDE", "Elo Blitz FIDE",
+        "K Elo Blitz FIDE", "N. Partite Elo Blitz FIDE", "Attivita giocatore FIDE",
+        "Data di nascita", "Provincia di residenza", "Regione di residenza",
+        "Provincia di tesseramento", "Regione di tesseramento", "Cittadinanza",
+        "Data ultimo torneo giocato", "Societa tesseramento (codice)",
+        "Non piu valorizzato 1", "Non piu valorizzato 2", "Non piu valorizzato 3",
+        "Tipo tessera", "Numero tessera"
+    ];
+    if (INCLUDI_SOCIETA_ESTESA) ALLIN_COLUMNS.push("Societa tesseramento (esteso)");
+
+    const NUMERIC_COLS = new Set([
+        "Elo", "K Italia", "ID FSI", "ID FIDE", "Elo FIDE Standard", "K Elo FIDE Standard", 
+        "N. Partite Elo FIDE Standard", "Elo Rapid FIDE", "K Elo Rapid FIDE", 
+        "N. Partite Elo Rapid FIDE", "Elo Blitz FIDE", "K Elo Blitz FIDE", 
+        "N. Partite Elo Blitz FIDE", "Anno di nascita", "Numero tessera"
+    ]);
+
+    const TITLE_RANK = {
+        "GM": 8, "IM": 7, "WGM": 6, "FM": 5, "WIM": 4, "CM": 3, "WFM": 2, "WCM": 1, "": 0
+    };
+
+    let logContent = "";
+    function log(msg) {
+        logContent += msg + "\n";
+        const logEl = document.getElementById('logArea');
+        logEl.value = logContent;
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    // Helper per cedere l'esecuzione al browser e permettere l'aggiornamento visivo (Progress bar)
+    const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 5));
+
+    function setProgress(percent) {
+        document.getElementById('progressWrapper').style.display = 'flex';
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressText').textContent = Math.floor(percent) + '%';
+    }
+
+    // --------------------------------------------------------------------------
+    // EXPORT LOG
+    // --------------------------------------------------------------------------
+    function downloadLogs() {
+        const text = document.getElementById('logArea').value;
+        if (!text || text.trim() === "In attesa di avviare l'elaborazione...") return;
+        
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `postallin_log_${ts}.txt`;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+
+    // --------------------------------------------------------------------------
+    // UTILITY
+    // --------------------------------------------------------------------------
+    let warnedRegions = new Set();
+    function regioneToSigla(nomeRegione) {
+        if (!nomeRegione) return "";
+        const chiave = String(nomeRegione).trim().toUpperCase();
+        if (chiave in REGIONE_TO_SIGLA) return REGIONE_TO_SIGLA[chiave];
+        if (chiave === "") return "";
+        if (!warnedRegions.has(chiave)) {
+            log(`[WARN] Regione non mappata in REGIONE_TO_SIGLA: '${nomeRegione}' -> lasciata invariata.`);
+            warnedRegions.add(chiave);
+        }
+        return chiave;
+    }
+
+    function ggmmaaaaToAnno(dataStr) {
+        if (!dataStr || !String(dataStr).trim()) return "";
+        const parti = String(dataStr).trim().split("-");
+        if (parti.length === 3 && parti[2].length === 4 && !isNaN(parti[2])) return parti[2];
+        return "";
+    }
+
+    function ggmmaaToGgmmaaaa(data6, annoPivot = ANNO_PIVOT) {
+        if (!data6) return "";
+        const s = String(data6).trim();
+        if (!/^\d{6}$/.test(s)) return "";
+        const gg = s.substring(0, 2);
+        const mm = s.substring(2, 4);
+        const yy = s.substring(4, 6);
+        if (gg === "00" || mm === "00") return "";
+        const secolo = parseInt(yy, 10) <= annoPivot ? 2000 : 1900;
+        const aaaa = secolo + parseInt(yy, 10);
+        return `${gg}-${mm}-${aaaa}`;
+    }
+
+    function parseCSVLine(line) {
+        let ret = [], cur = '', inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+            let c = line[i];
+            if (c === '"') {
+                if (inQuote && i + 1 < line.length && line[i + 1] === '"') { cur += '"'; i++; }
+                else { inQuote = !inQuote; }
+            } else if (c === ';' && !inQuote) {
+                ret.push(cur); cur = '';
+            } else { cur += c; }
+        }
+        ret.push(cur);
+        return ret;
+    }
+
+    function readFile(file, encoding = 'utf-8') {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                let text = e.target.result;
+                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                resolve(text);
+            };
+            reader.onerror = e => reject(e);
+            reader.readAsText(file, encoding);
+        });
+    }
+
+    function toNumber(val) {
+        if (!val || String(val).trim() === "") return 0;
+        const num = Number(val);
+        return isNaN(num) ? 0 : Math.trunc(num);
+    }
+
+    // --------------------------------------------------------------------------
+    // STEPS
+    // --------------------------------------------------------------------------
+    function buildStep1FromElenco(csvText) {
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        let out = [];
+        for (let line of lines) {
+            const cols = parseCSVLine(line);
+            if (cols.length < 15) continue;
+            
+            let row = {};
+            ALLIN_COLUMNS.forEach(c => row[c] = NUMERIC_COLS.has(c) ? 0 : "");
+            
+            row["Cognome e Nome"] = (String(cols[1]).trim() + " " + String(cols[2]).trim()).trim();
+            row["Categoria"] = cols[4];
+            
+            let dataNascita = cols[3];
+            let annoNascita = ggmmaaaaToAnno(dataNascita);
+            row["Anno di nascita"] = toNumber(annoNascita);
+            row["ID FSI"] = toNumber(cols[0]);
+            row["Sesso"] = cols[8];
+            row["Data di nascita"] = dataNascita;
+            row["Provincia di residenza"] = cols[5];
+            row["Regione di residenza"] = regioneToSigla(cols[6]);
+            row["Provincia di tesseramento"] = cols[11];
+            row["Regione di tesseramento"] = regioneToSigla(cols[12]);
+            row["Cittadinanza"] = cols[7];
+            row["Societa tesseramento (codice)"] = cols[9];
+            row["Tipo tessera"] = cols[13];
+            row["Numero tessera"] = toNumber(cols[14]);
+            if (INCLUDI_SOCIETA_ESTESA) row["Societa tesseramento (esteso)"] = cols[10] || "";
+
+            out.push(row);
+        }
+        return out;
+    }
+
+    function applyStep2Vega(allin, csvText) {
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        let n_update = 0, n_insert = 0;
+        
+        let idxByFsi = new Map();
+        allin.forEach((row, idx) => idxByFsi.set(row["ID FSI"], idx));
+
+        let nuove_righe = [];
+
+        for (let line of lines) {
+            const cols = parseCSVLine(line);
+            if (cols.length < 9) continue;
+
+            const idFsi = toNumber(cols[7]);
+            if (!idFsi) continue;
+
+            if (idxByFsi.has(idFsi)) {
+                let row = allin[idxByFsi.get(idFsi)];
+                row["Elo"] = toNumber(cols[1]);
+                row["Categoria"] = cols[2];
+                row["K Italia"] = toNumber(cols[3]);
+                row["ID FIDE"] = toNumber(cols[6]);
+                n_update++;
+            } else {
+                let dataConv = ggmmaaToGgmmaaaa(cols[5]);
+                let row = {};
+                ALLIN_COLUMNS.forEach(c => row[c] = NUMERIC_COLS.has(c) ? 0 : "");
+                
+                row["Cognome e Nome"] = cols[0];
+                row["Elo"] = toNumber(cols[1]);
+                row["Categoria"] = cols[2];
+                row["K Italia"] = toNumber(cols[3]);
+                row["ID FSI"] = idFsi;
+                row["Sesso"] = String(cols[8] || "").trim().toUpperCase();
+                row["ID FIDE"] = toNumber(cols[6]);
+                row["Data di nascita"] = dataConv;
+                row["Anno di nascita"] = dataConv ? toNumber(dataConv.split("-")[2]) : 0;
+                row["Provincia di residenza"] = cols[4];
+                
+                nuove_righe.push(row);
+                n_insert++;
+            }
+        }
+        
+        if (nuove_righe.length > 0) {
+            allin = allin.concat(nuove_righe);
+        }
+        
+        log(`      -> ${n_update} record aggiornati, ${n_insert} nuovi record inseriti`);
+        return allin;
+    }
+
+    function applyStep3Manuali(allin, csvText) {
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        
+        let idxByFsi = new Map();
+        let finToFsi = new Map();
+        allin.forEach((row, idx) => {
+            idxByFsi.set(row["ID FSI"], idx);
+            if (row["ID FIDE"] !== 0) finToFsi.set(row["ID FIDE"], row["ID FSI"]);
+        });
+
+        let n_ok = 0, n_skip = 0, n_err = 0;
+
+        for (let line of lines) {
+            const cols = parseCSVLine(line);
+            if (cols.length < 8) continue;
+
+            const fsi = toNumber(cols[0]);
+            const fin = toNumber(cols[4]);
+            if (!fsi || !fin) { 
+                log(`[ERRORE step3] Riga con ID FSI/FIN non numerico.`); 
+                n_err++; continue; 
+            }
+
+            if (finToFsi.has(fin)) {
+                if (finToFsi.get(fin) === fsi) { n_skip++; continue; }
+                else {
+                    log(`[ERRORE step3] FIN ${fin} risulta gia' abbinato all'ID FSI ${finToFsi.get(fin)}, non a ${fsi} come richiesto.`);
+                    n_err++; continue;
+                }
+            }
+
+            if (!idxByFsi.has(fsi)) {
+                log(`[ERRORE step3] ID FSI ${fsi} non trovato in allin.`);
+                n_err++; continue;
+            }
+
+            allin[idxByFsi.get(fsi)]["ID FIDE"] = fin;
+            finToFsi.set(fin, fsi);
+            n_ok++;
+        }
+        
+        log(`      -> ${n_ok} abbinamenti applicati, ${n_err} errori`);
+        return allin;
+    }
+
+    // --------------------------------------------------------------------------
+    // STEP 4 - STREAMING
+    // --------------------------------------------------------------------------
+    async function applyStep4FideStreaming(allin, file, onProgressUpdate) {
+        const PLAYERS_FIELDS = [
+            ["fin", 1, 15], ["nome", 16, 76], ["federazione", 77, 79], ["sesso", 81, 81],
+            ["titolo_ass", 85, 87], ["titolo_fem", 89, 91], ["altri_titoli", 93, 112],
+            ["elo_std", 114, 117], ["partite_std", 119, 121], ["k_std", 123, 125],
+            ["elo_rapid", 127, 130], ["partite_rapid", 132, 134], ["k_rapid", 136, 138],
+            ["elo_blitz", 140, 143], ["partite_blitz", 145, 147], ["k_blitz", 149, 151],
+            ["anno_nascita", 153, 156], ["flag", 158, 161]
+        ];
+
+        function _slice(s, start_1, end_1) {
+            return s.length >= start_1 ? s.substring(start_1 - 1, end_1).trim() : "";
+        }
+        
+        function _truncate(v, n, isNumField) {
+            v = (v || "").trim();
+            if (!v) return "";
+            let head = v.substring(0, n);
+            if (isNumField) {
+                return head.replace(/^0+/, "") === "" ? head.substring(0, 1) : head;
+            }
+            return head;
+        }
+
+        function _decodeFlag(v) {
+            v = (v || "").trim().toLowerCase();
+            const mapping = { "": ["attivo", null], "i": ["inattivo", null], "w": ["attivo", "F"], "wi": ["inattivo", "F"] };
+            return mapping[v] || ["attivo", null];
+        }
+
+        let neededFins = new Set();
+        allin.forEach(row => {
+            if (row["ID FIDE"] && row["ID FIDE"] > 0) neededFins.add(row["ID FIDE"]);
+        });
+
+        let playersByFin = new Map();
+        
+        const totalBytes = file.size;
+        let bytesRead = 0;
+
+        const stream = file.stream();
+        const reader = stream.getReader();
+        const decoder = new TextDecoder('iso-8859-1');
+        let partialLine = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            bytesRead += value.length;
+            if (onProgressUpdate) {
+                // Durante lo step 4, la progress sale dal 50% al 90%
+                let p = 50 + (bytesRead / totalBytes) * 40;
+                onProgressUpdate(p);
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = (partialLine + chunk).split(/\r?\n/);
+            
+            partialLine = lines.pop(); 
+
+            for (let line of lines) {
+                if (line.trim().length === 0) continue;
+                
+                let rawFin = _slice(line, 1, 15);
+                let fin = toNumber(rawFin);
+                if (fin === 0 || !neededFins.has(fin)) continue;
+
+                let p = {};
+                PLAYERS_FIELDS.forEach(([name, s, e]) => p[name] = _slice(line, s, e));
+                
+                p.federazione = _truncate(p.federazione, 3, false);
+                p.sesso = _truncate(p.sesso, 1, false);
+                p.titolo_ass = _truncate(p.titolo_ass, 3, false);
+                p.titolo_fem = _truncate(p.titolo_fem, 3, false);
+                p.elo_std = _truncate(p.elo_std, 4, true);
+                p.k_std = _truncate(p.k_std, 3, true);
+                p.elo_rapid = _truncate(p.elo_rapid, 4, true);
+                p.k_rapid = _truncate(p.k_rapid, 3, true);
+                p.elo_blitz = _truncate(p.elo_blitz, 4, true);
+                p.k_blitz = _truncate(p.k_blitz, 3, true);
+                p.anno_nascita = _truncate(p.anno_nascita, 4, false);
+                
+                let decoded = _decodeFlag(p.flag);
+                p.fide_attivita = decoded[0];
+                p.fide_sesso_da_flag = decoded[1];
+                
+                playersByFin.set(fin, p);
+            }
+        }
+        
+        const finalChunk = decoder.decode();
+        if (finalChunk || partialLine) {
+            let lastLine = partialLine + finalChunk;
+            if (lastLine.trim().length > 0) {
+                let rawFin = _slice(lastLine, 1, 15);
+                let fin = toNumber(rawFin);
+                if (fin > 0 && neededFins.has(fin)) {
+                    let p = {};
+                    PLAYERS_FIELDS.forEach(([name, s, e]) => p[name] = _slice(lastLine, s, e));
+                    let decoded = _decodeFlag(p.flag);
+                    p.fide_attivita = decoded[0];
+                    p.fide_sesso_da_flag = decoded[1];
+                    playersByFin.set(fin, p);
+                }
+            }
+        }
+
+        let n_agg = 0;
+        allin.forEach((row, idx) => {
+            const fin = row["ID FIDE"];
+            if (fin === 0 || !playersByFin.has(fin)) return;
+
+            let p = playersByFin.get(fin);
+            let rankFem = TITLE_RANK[p.titolo_fem] || 0;
+            let rankAss = TITLE_RANK[p.titolo_ass] || 0;
+            let titolo = rankFem > rankAss ? p.titolo_fem : p.titolo_ass;
+
+            if (titolo) row["Categoria"] = titolo;
+            row["Federazione FIDE"] = p.federazione;
+            row["Elo FIDE Standard"] = toNumber(p.elo_std);
+            row["K Elo FIDE Standard"] = toNumber(p.k_std);
+            row["N. Partite Elo FIDE Standard"] = toNumber(p.partite_std);
+            row["Elo Rapid FIDE"] = toNumber(p.elo_rapid);
+            row["K Elo Rapid FIDE"] = toNumber(p.k_rapid);
+            row["N. Partite Elo Rapid FIDE"] = toNumber(p.partite_rapid);
+            row["Elo Blitz FIDE"] = toNumber(p.elo_blitz);
+            row["K Elo Blitz FIDE"] = toNumber(p.k_blitz);
+            row["N. Partite Elo Blitz FIDE"] = toNumber(p.partite_blitz);
+            row["Attivita giocatore FIDE"] = p.fide_attivita;
+            
+            n_agg++;
+
+            let annoAllin = String(row["Anno di nascita"]);
+            if (p.anno_nascita && annoAllin !== "0" && p.anno_nascita !== annoAllin) {
+                stampaSegnalazione("anno di nascita", row["ID FSI"], fin, row, p, annoAllin, p.anno_nascita);
+            }
+            
+            let sessoFide = p.fide_sesso_da_flag ? p.fide_sesso_da_flag : "M";
+            let sessoAllin = String(row["Sesso"]).trim().toUpperCase();
+            if (sessoAllin && sessoAllin !== sessoFide) {
+                stampaSegnalazione("sesso", row["ID FSI"], fin, row, p, sessoAllin, sessoFide);
+            }
+        });
+        
+        log(`      -> ${n_agg} record aggiornati con dati FIDE`);
+        return allin;
+    }
+
+    function stampaSegnalazione(tipo, fsi, fin, rowAllin, p, valAllin, valFide) {
+        let msg = `\n[SEGNALAZIONE step4] ID FSI ${fsi} (FIN ${fin}): ${tipo} allin=${valAllin} vs FIDE=${valFide}\n`;
+        msg += "  --- Valori FSI ---\n";
+        ALLIN_COLUMNS.forEach(c => msg += `  ${c} = ${rowAllin[c]}\n`);
+        msg += "  --- Valori FIDE ---\n";
+        const FIDE_REPORT_FIELDS = [
+            "fin", "nome", "federazione", "sesso", "titolo_ass", "titolo_fem",
+            "altri_titoli", "elo_std", "partite_std", "k_std", "elo_rapid",
+            "partite_rapid", "k_rapid", "elo_blitz", "partite_blitz", "k_blitz",
+            "anno_nascita", "flag", "fide_attivita", "fide_sesso_da_flag"
+        ];
+        FIDE_REPORT_FIELDS.forEach(f => msg += `  ${f} = ${p[f] || ''}\n`);
+        msg += `  Link FIDE: https://ratings.fide.com/profile/${fin}\n`;
+        log(msg);
+    }
+
+    // --------------------------------------------------------------------------
+    // MAIN / ORCHESTRAZIONE
+    // --------------------------------------------------------------------------
+    async function processAll() {
+        const btn = document.getElementById("processBtn");
+        const downloadArea = document.getElementById("downloadArea");
+        const elencoFile = document.getElementById("elencoFile").files[0];
+        const vegaFile = document.getElementById("vegaFile").files[0];
+        const manualiFile = document.getElementById("manualiFile").files[0];
+        const fideFile = document.getElementById("fideFile").files[0];
+
+        // Validazione: i 3 file principali ora sono obbligatori
+        if (!elencoFile || !vegaFile || !fideFile) {
+            alert("I file Elenco tesserati, Vega e Lista giocatori FIDE sono obbligatori.");
+            return;
+        }
+
+        btn.disabled = true;
+        downloadArea.style.display = "none";
+        logContent = "";
+        document.getElementById('logArea').value = "";
+        setProgress(0);
+
+        try {
+            log("[*] Inizio elaborazione file locali...\n");
+            
+            setProgress(5);
+            await yieldToMain();
+            
+            // Step 1
+            log(`[1/4] Lettura ${elencoFile.name} ...`);
+            const elencoText = await readFile(elencoFile, 'utf-8');
+            setProgress(15);
+            await yieldToMain();
+
+            let allin = buildStep1FromElenco(elencoText);
+            log(`      -> ${allin.length} tesserati caricati`);
+            setProgress(25);
+            await yieldToMain();
+
+            // Step 2
+            log(`[2/4] Lettura ${vegaFile.name} e aggiornamento Elo/Categoria/K/ID FIDE ...`);
+            const vegaText = await readFile(vegaFile, 'utf-8');
+            setProgress(35);
+            await yieldToMain();
+
+            allin = applyStep2Vega(allin, vegaText);
+            setProgress(45);
+            await yieldToMain();
+
+            // Step 3
+            if (manualiFile) {
+                log(`[3/4] Lettura ${manualiFile.name} (abbinamenti manuali ID FSI/FIN) ...`);
+                const manualiText = await readFile(manualiFile, 'utf-8');
+                allin = applyStep3Manuali(allin, manualiText);
+            } else {
+                log("[3/4] Nessun file di abbinamenti manuali fornito: passo saltato.");
+            }
+            setProgress(50);
+            await yieldToMain();
+
+            // Step 4
+            log(`[4/4] Lettura ${fideFile.name} (lista FIDE) ...`);
+            allin = await applyStep4FideStreaming(allin, fideFile, setProgress);
+            
+            setProgress(90);
+            await yieldToMain();
+
+            // Generazione CSV
+            log(`\n[*] Generazione allin.csv in corso...`);
+            let csvContent = ALLIN_COLUMNS.join(DELIM_OUT) + "\n";
+            for (let row of allin) {
+                let r = ALLIN_COLUMNS.map(c => {
+                    let val = row[c];
+                    if (typeof val === 'string' && (val.includes(DELIM_OUT) || val.includes('"') || val.includes('\n') || val.includes('\r'))) {
+                        val = '"' + val.replace(/"/g, '""') + '"';
+                    }
+                    return val;
+                });
+                csvContent += r.join(DELIM_OUT) + "\n";
+            }
+            
+            setProgress(98);
+            await yieldToMain();
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.getElementById("downloadLink");
+            downloadLink.href = url;
+            downloadLink.download = "allin.csv";
+            
+            setProgress(100);
+            downloadArea.style.display = "block";
+            log(`\nFile generato: allin.csv  (${allin.length} righe)`);
+            
+        } catch (err) {
+            log(`\n[ERRORE CRITICO] Si è verificata un'eccezione: ${err.message || err.name}`);
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
