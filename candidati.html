@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trova Candidati FIDE</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --success-hover: #059669;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --terminal-bg: #0f172a;
+            --terminal-header: #1e293b;
+            --terminal-text: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Layout */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 350px 1fr;
+                align-items: start;
+            }
+        }
+
+        /* Sezione Input */
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .help-text {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border: 1px dashed var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-color);
+            cursor: pointer;
+        }
+        
+        input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: var(--border);
+            color: var(--text-main);
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Pulsanti */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -2px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #downloadArea {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.1s ease-out;
+        }
+
+        /* Terminale */
+        .terminal-wrapper {
+            background-color: var(--terminal-bg);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 8rem);
+            min-height: 400px;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .terminal-header {
+            background-color: var(--terminal-header);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .terminal-title {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            background-color: transparent;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-small:hover {
+            background-color: #334155;
+            color: white;
+        }
+
+        #logArea {
+            flex: 1;
+            width: 100%;
+            background-color: transparent;
+            color: var(--terminal-text);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            padding: 1.25rem;
+            border: none;
+            resize: none;
+            outline: none;
+            line-height: 1.4;
+        }
+        
+        #logArea::selection {
+            background-color: rgba(16, 185, 129, 0.3);
+        }
+
+        svg {
+            width: 1.25em;
+            height: 1.25em;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-title">
+    <h1>Trova Candidati FIDE</h1>
+    <p>Ricerca abbinamenti FSI -> FIDE per Nome + Anno di nascita</p>
+</div>
+
+<div class="layout-grid">
+    
+    <!-- Colonna Sinistra: Input e Controlli -->
+    <div class="config-panel">
+        
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <span class="step-title">Elenco tesserati FSI</span>
+            </div>
+            <span class="help-text">Obbligatorio (elenco_tesserati.csv)</span>
+            <input type="file" id="elencoFile" accept=".csv" required>
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <span class="step-title">File Vega</span>
+            </div>
+            <span class="help-text">Obbligatorio (aaaa_mm_vega.csv)</span>
+            <input type="file" id="vegaFile" accept=".csv" required>
+        </div>
+
+        <div class="card">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <span class="step-title">Lista Giocatori FIDE</span>
+            </div>
+            <span class="help-text">Obbligatorio (players_list.txt)</span>
+            <input type="file" id="fideFile" accept=".txt" required>
+        </div>
+
+        <button id="processBtn" class="btn btn-primary" onclick="processAll()">
+            <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            Trova Candidati
+        </button>
+        
+        <!-- Barra di avanzamento -->
+        <div id="progressWrapper" class="progress-wrapper">
+            <div class="progress-header">
+                <span>Stato avanzamento</span>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div id="downloadArea">
+            <a id="downloadLink" class="btn btn-success">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Scarica candidati.csv
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Colonna Destra: Log -->
+    <div class="terminal-wrapper">
+        <div class="terminal-header">
+            <div class="terminal-title">
+                <svg viewBox="0 0 24 24" style="width: 1em; height: 1em;"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                Log
+            </div>
+            <button class="btn-small" onclick="downloadLogs()">
+                <svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Scarica log
+            </button>
+        </div>
+        <textarea id="logArea" readonly spellcheck="false">In attesa di avviare l'elaborazione...</textarea>
+    </div>
+
+</div>
+
+<script>
+    // --------------------------------------------------------------------------
+    // CONFIGURAZIONE E UTILITY
+    // --------------------------------------------------------------------------
+    const DELIM_OUT = ";";
+
+    let logContent = "";
+    function log(msg) {
+        logContent += msg + "\n";
+        const logEl = document.getElementById('logArea');
+        logEl.value = logContent;
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 5));
+
+    function setProgress(percent) {
+        document.getElementById('progressWrapper').style.display = 'flex';
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressText').textContent = Math.floor(percent) + '%';
+    }
+
+    function downloadLogs() {
+        const text = document.getElementById('logArea').value;
+        if (!text || text.trim() === "In attesa di avviare l'elaborazione...") return;
+        
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `trova_candidati_log_${ts}.txt`;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+
+    function parseCSVLine(line) {
+        let ret = [], cur = '', inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+            let c = line[i];
+            if (c === '"') {
+                if (inQuote && i + 1 < line.length && line[i + 1] === '"') { cur += '"'; i++; }
+                else { inQuote = !inQuote; }
+            } else if (c === ';' && !inQuote) {
+                ret.push(cur); cur = '';
+            } else { cur += c; }
+        }
+        ret.push(cur);
+        return ret;
+    }
+
+    function readFile(file, encoding = 'utf-8') {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                let text = e.target.result;
+                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                resolve(text);
+            };
+            reader.onerror = e => reject(e);
+            reader.readAsText(file, encoding);
+        });
+    }
+
+    function ggmmaaaaToAnno(dataStr) {
+        if (!dataStr || !String(dataStr).trim()) return "";
+        const parti = String(dataStr).trim().split("-");
+        if (parti.length === 3 && parti[2].length === 4 && !isNaN(parti[2])) return parti[2];
+        return "";
+    }
+
+    function normalizeNameTokens(name) {
+        if (!name) return "";
+        // Rimuove accenti (NFKD), mette in maiuscolo e rimpiazza caratteri non A-Z con spazio
+        let normalized = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+        normalized = normalized.toUpperCase().replace(/[^A-Z]+/g, " ");
+        
+        let tokens = normalized.split(/\s+/).filter(t => t.length > 0);
+        tokens.sort(); // Ordinamento alfabetico dei token
+        return tokens.join("|"); // Stringa chiave univoca per la comparazione
+    }
+
+    function escapeCSV(val) {
+        if (typeof val === 'string' && (val.includes(DELIM_OUT) || val.includes('"') || val.includes('\n') || val.includes('\r'))) {
+            return '"' + val.replace(/"/g, '""') + '"';
+        }
+        return val;
+    }
+
+    // --------------------------------------------------------------------------
+    // MAIN / ORCHESTRAZIONE
+    // --------------------------------------------------------------------------
+    async function processAll() {
+        const btn = document.getElementById("processBtn");
+        const downloadArea = document.getElementById("downloadArea");
+        const elencoFile = document.getElementById("elencoFile").files[0];
+        const vegaFile = document.getElementById("vegaFile").files[0];
+        const fideFile = document.getElementById("fideFile").files[0];
+
+        if (!elencoFile || !vegaFile || !fideFile) {
+            alert("Tutti i 3 file sono obbligatori.");
+            return;
+        }
+
+        btn.disabled = true;
+        downloadArea.style.display = "none";
+        logContent = "";
+        document.getElementById('logArea').value = "";
+        setProgress(0);
+
+        try {
+            log("[*] Inizio ricerca candidati...\n");
+            await yieldToMain();
+            
+            // ---------------------------------------------------------
+            // STEP 1: Lettura Vega
+            // ---------------------------------------------------------
+            setProgress(10);
+            log(`[1/4] Lettura ${vegaFile.name} ...`);
+            const vegaText = await readFile(vegaFile, 'utf-8');
+            await yieldToMain();
+            
+            let vega_fsi_set = new Set();
+            let vega_fide_usati = new Set();
+            let n_gia_su_fide = 0;
+
+            const vegaLines = vegaText.split(/\r?\n/);
+            for (let line of vegaLines) {
+                if (!line.trim()) continue;
+                let cols = parseCSVLine(line);
+                if (cols.length < 9) continue;
+
+                let idFsi = parseInt(cols[7], 10);
+                let idFide = parseInt(cols[6], 10);
+
+                if (!isNaN(idFsi)) {
+                    vega_fsi_set.add(idFsi);
+                    if (!isNaN(idFide) && idFide > 0) {
+                        n_gia_su_fide++;
+                        vega_fide_usati.add(idFide);
+                    }
+                }
+            }
+            log(`      -> ${vega_fsi_set.size} ID FSI presenti in vega (${n_gia_su_fide} con ID FIDE valido)`);
+            
+            // ---------------------------------------------------------
+            // STEP 2: Lettura Elenco Tesserati
+            // ---------------------------------------------------------
+            setProgress(25);
+            log(`[2/4] Lettura ${elencoFile.name} ...`);
+            const elencoText = await readFile(elencoFile, 'utf-8');
+            await yieldToMain();
+
+            let n_totali = 0, n_id_fsi_invalido = 0, n_non_in_vega = 0, n_anno_mancante = 0;
+            let targetFsiList = [];
+            let fsiIndex = new Map(); // key -> array of target refs
+
+            const elencoLines = elencoText.split(/\r?\n/);
+            for (let line of elencoLines) {
+                if (!line.trim()) continue;
+                let cols = parseCSVLine(line);
+                if (cols.length < 15) continue;
+
+                n_totali++;
+                let fsi = parseInt(cols[0], 10);
+                if (isNaN(fsi)) {
+                    n_id_fsi_invalido++;
+                    continue;
+                }
+
+                if (vega_fsi_set.has(fsi)) continue; // Già presente in Vega
+
+                n_non_in_vega++;
+                let cognomeNome = (cols[1].trim() + " " + cols[2].trim()).trim();
+                let dataNascita = cols[3].trim();
+                let sesso = cols[8] ? cols[8].trim() : "";
+                let annoStr = ggmmaaaaToAnno(dataNascita);
+
+                let target = {
+                    fsi: fsi,
+                    cognomeNome: cognomeNome,
+                    dataNascita: dataNascita,
+                    sesso: sesso,
+                    annoStr: annoStr,
+                    candidates: [],
+                    discardedCount: 0
+                };
+                targetFsiList.push(target);
+
+                if (!annoStr) {
+                    n_anno_mancante++;
+                } else {
+                    let annoNum = parseInt(annoStr, 10);
+                    let key = normalizeNameTokens(cognomeNome) + "_" + annoNum;
+                    if (!fsiIndex.has(key)) fsiIndex.set(key, []);
+                    fsiIndex.get(key).push(target);
+                }
+            }
+            log(`      -> ${n_totali} tesserati elaborati (${n_non_in_vega} non presenti in vega e indicizzati per la ricerca)`);
+
+            // ---------------------------------------------------------
+            // STEP 3: Ricerca Streaming in players_list.txt
+            // ---------------------------------------------------------
+            setProgress(40);
+            log(`[3/4] Lettura ${fideFile.name} e ricerca candidati ...`);
+            await yieldToMain();
+
+            const totalBytes = fideFile.size;
+            let bytesRead = 0;
+            const stream = fideFile.stream();
+            const reader = stream.getReader();
+            const decoder = new TextDecoder('iso-8859-1'); // FIDE list is latin-1
+            let partialLine = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                bytesRead += value.length;
+                setProgress(40 + (bytesRead / totalBytes) * 45); // Sale fino all'85%
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = (partialLine + chunk).split(/\r?\n/);
+                partialLine = lines.pop();
+
+                for (let line of lines) {
+                    // Controlla che la lunghezza della riga includa l'anno (almeno 156 chars)
+                    if (line.trim().length < 156) continue;
+
+                    let rawFin = line.substring(0, 15).trim();
+                    let fin = parseInt(rawFin, 10);
+                    if (isNaN(fin) || fin <= 0) continue;
+
+                    let annoStr = line.substring(152, 156).trim();
+                    if (!/^\d{4}$/.test(annoStr)) continue;
+                    let annoNum = parseInt(annoStr, 10);
+
+                    let nome = line.substring(15, 76).trim();
+                    let key = normalizeNameTokens(nome) + "_" + annoNum;
+
+                    // Match Trovato!
+                    if (fsiIndex.has(key)) {
+                        let targets = fsiIndex.get(key);
+                        let isUsed = vega_fide_usati.has(fin);
+                        let sessoFide = line.substring(79, 80).trim();
+                        
+                        for (let t of targets) {
+                            if (isUsed) {
+                                t.discardedCount++;
+                            } else {
+                                t.candidates.push({
+                                    fin: fin,
+                                    nome: nome,
+                                    anno: annoNum,
+                                    sesso: sessoFide
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            log(`      -> Ricerca in ${fideFile.name} completata.`);
+
+            // ---------------------------------------------------------
+            // STEP 4: Generazione Report e CSV
+            // ---------------------------------------------------------
+            setProgress(90);
+            log(`[4/4] Generazione output e statistiche...`);
+            await yieldToMain();
+
+            let n_nessuna_corrispondenza = 0;
+            let n_match_unico = 0;
+            let n_omonimie = 0;
+            let n_scartati_tutti = 0;
+            let n_candidati_scartati = 0;
+
+            let outRows = [];
+
+            for (let t of targetFsiList) {
+                let base = [t.fsi, t.cognomeNome, t.dataNascita, t.sesso];
+                
+                if (!t.annoStr) {
+                    outRows.push([...base, "", "", "", "", "ANNO DI NASCITA FSI MANCANTE - impossibile cercare"]);
+                    continue;
+                }
+                
+                if (t.candidates.length === 0 && t.discardedCount === 0) {
+                    n_nessuna_corrispondenza++;
+                    outRows.push([...base, "", "", "", "", "NESSUNA CORRISPONDENZA IN FIDE"]);
+                    continue;
+                }
+                
+                if (t.candidates.length === 0 && t.discardedCount > 0) {
+                    n_scartati_tutti++;
+                    n_candidati_scartati += t.discardedCount;
+                    outRows.push([...base, "", "", "", "", `CANDIDATO/I SCARTATO/I: ${t.discardedCount} FIN trovato/i per nome+anno risulta/no gia' associato/i ad altro tesserato in vega`]);
+                    continue;
+                }
+
+                n_candidati_scartati += t.discardedCount;
+                let totale = t.candidates.length;
+                if (totale > 1) n_omonimie++;
+                else n_match_unico++;
+
+                for (let i = 0; i < totale; i++) {
+                    let c = t.candidates[i];
+                    let omoLabel = totale === 1 ? "" : `OMONIMIA ${i + 1}/${totale}`;
+                    outRows.push([
+                        ...base,
+                        c.fin,
+                        c.nome,
+                        c.anno,
+                        c.sesso,
+                        omoLabel
+                    ]);
+                }
+            }
+
+            // Statistiche di Report
+            let n_validi = n_totali - n_id_fsi_invalido;
+            let n_dopo = n_gia_su_fide + n_match_unico + n_omonimie;
+            let pct_prima = n_validi > 0 ? (100.0 * n_gia_su_fide / n_validi).toFixed(1) : "0.0";
+            let pct_dopo = n_validi > 0 ? (100.0 * n_dopo / n_validi).toFixed(1) : "0.0";
+            let diff_n = n_dopo - n_gia_su_fide;
+            let diff_pct = (parseFloat(pct_dopo) - parseFloat(pct_prima)).toFixed(1);
+
+            log(`\nTesserati FSI totali:                   ${n_totali}`);
+            log(`  - con ID FSI non valido (esclusi):    ${n_id_fsi_invalido}`);
+            log(`  - con ID FSI valido (base % sotto):   ${n_validi}`);
+            log(`Non trovati in vega (per ID FSI):       ${n_non_in_vega}`);
+            log(`  - senza anno di nascita valido:       ${n_anno_mancante}`);
+            log(`  - nessuna corrispondenza in FIDE:     ${n_nessuna_corrispondenza}`);
+            log(`  - corrispondenza unica in FIDE:       ${n_match_unico}`);
+            log(`  - corrispondenze multiple (omonimie): ${n_omonimie}`);
+            log(`  - tutti i candidati scartati (FIN gia' in vega): ${n_scartati_tutti} tesserati (${n_candidati_scartati} FIN singoli scartati in totale)\n`);
+            
+            log(`Tesserati gia' su FIDE PRIMA della ricerca candidati (ID FIDE gia' in vega):`);
+            log(`    ${n_gia_su_fide} / ${n_validi}  (${pct_prima}%)`);
+            log(`Tesserati su FIDE DOPO la ricerca candidati (prima + candidati validi trovati, univoci o omonimi):`);
+            log(`    ${n_dopo} / ${n_validi}  (${pct_dopo}%)`);
+            log(`    (incremento dovuto alla ricerca: +${diff_n} tesserati, +${diff_pct} punti percentuali)`);
+
+            // Creazione CSV FINALE (NO Intestazione)
+            let csvContent = outRows.map(r => r.map(escapeCSV).join(DELIM_OUT)).join("\n") + "\n";
+            
+            setProgress(98);
+            await yieldToMain();
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.getElementById("downloadLink");
+            downloadLink.href = url;
+            downloadLink.download = "candidati.csv";
+            
+            setProgress(100);
+            downloadArea.style.display = "block";
+            log(`\nFile generato: candidati.csv  (${outRows.length} righe)`);
+            
+        } catch (err) {
+            log(`\n[ERRORE CRITICO] Si è verificata un'eccezione: ${err.message || err.name}`);
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
