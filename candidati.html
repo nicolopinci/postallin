@@ -390,7 +390,7 @@
 
     let logContent = "";
     function log(msg) {
-        logContent += msg + "\\n";
+        logContent += msg + "\n";
         const logEl = document.getElementById('logArea');
         logEl.value = logContent;
         logEl.scrollTop = logEl.scrollHeight;
@@ -474,7 +474,7 @@
     }
 
     function escapeCSV(val) {
-        if (typeof val === 'string' && (val.includes(DELIM_OUT) || val.includes('"') || val.includes('\\n') || val.includes('\\r'))) {
+        if (typeof val === 'string' && (val.includes(DELIM_OUT) || val.includes('"') || val.includes('\n') || val.includes('\r'))) {
             return '"' + val.replace(/"/g, '""') + '"';
         }
         return val;
@@ -502,7 +502,7 @@
         setProgress(0);
 
         try {
-            log("[*] Inizio ricerca candidati...\\n");
+            log("[*] Inizio ricerca candidati...\n");
             await yieldToMain();
             
             // ---------------------------------------------------------
@@ -515,9 +515,9 @@
             
             let vega_fsi_set = new Set();
             let vega_fide_usati = new Set();
-            let vega_fide_by_fsi = new Map(); // FIX: mappa degli ID FIDE associati
+            let vega_fide_by_fsi = new Map();
 
-            const vegaLines = vegaText.split(/\\r?\\n/);
+            const vegaLines = vegaText.split(/\r?\n/);
             for (let line of vegaLines) {
                 if (!line.trim()) continue;
                 let cols = parseCSVLine(line);
@@ -545,11 +545,11 @@
             await yieldToMain();
 
             let n_totali = 0, n_id_fsi_invalido = 0, n_non_in_vega = 0, n_anno_mancante = 0;
-            let n_gia_su_fide = 0; // FIX: calcolato su base "elenco_tesserati"
+            let n_gia_su_fide = 0; 
             let targetFsiList = [];
             let fsiIndex = new Map();
 
-            const elencoLines = elencoText.split(/\\r?\\n/);
+            const elencoLines = elencoText.split(/\r?\n/);
             for (let line of elencoLines) {
                 if (!line.trim()) continue;
                 let cols = parseCSVLine(line);
@@ -562,7 +562,7 @@
                     continue;
                 }
 
-                // FIX: Verifica se il tesserato è già in vega e se ha l'ID FIDE
+                // Verifica se il tesserato è già in vega e se ha l'ID FIDE
                 if (vega_fsi_set.has(fsi)) {
                     if (vega_fide_by_fsi.has(fsi)) {
                         n_gia_su_fide++;
@@ -620,7 +620,7 @@
                 setProgress(40 + (bytesRead / totalBytes) * 45);
 
                 const chunk = decoder.decode(value, { stream: true });
-                const lines = (partialLine + chunk).split(/\\r?\\n/);
+                const lines = (partialLine + chunk).split(/\r?\n/);
                 partialLine = lines.pop();
 
                 for (let line of lines) {
@@ -631,7 +631,7 @@
                     if (isNaN(fin) || fin <= 0) continue;
 
                     let annoStr = line.substring(152, 156).trim();
-                    if (!/^\\d{4}$/.test(annoStr)) continue;
+                    if (!/^\d{4}$/.test(annoStr)) continue;
                     let annoNum = parseInt(annoStr, 10);
 
                     let nome = line.substring(15, 76).trim();
@@ -722,7 +722,7 @@
             let diff_n = n_dopo - n_gia_su_fide;
             let diff_pct = (parseFloat(pct_dopo) - parseFloat(pct_prima)).toFixed(1);
 
-            log(`\\nTesserati FSI totali:                   ${n_totali}`);
+            log(`\nTesserati FSI totali:                   ${n_totali}`);
             log(`  - con ID FSI non valido (esclusi):    ${n_id_fsi_invalido}`);
             log(`  - con ID FSI valido (base % sotto):   ${n_validi}`);
             log(`Non trovati in vega (per ID FSI):       ${n_non_in_vega}`);
@@ -730,7 +730,7 @@
             log(`  - nessuna corrispondenza in FIDE:     ${n_nessuna_corrispondenza}`);
             log(`  - corrispondenza unica in FIDE:       ${n_match_unico}`);
             log(`  - corrispondenze multiple (omonimie): ${n_omonimie}`);
-            log(`  - tutti i candidati scartati (FIN gia' in vega): ${n_scartati_tutti} tesserati (${n_candidati_scartati} FIN singoli scartati in totale)\\n`);
+            log(`  - tutti i candidati scartati (FIN gia' in vega): ${n_scartati_tutti} tesserati (${n_candidati_scartati} FIN singoli scartati in totale)\n`);
             
             log(`Tesserati gia' su FIDE PRIMA della ricerca candidati (ID FIDE gia' in vega):`);
             log(`    ${n_gia_su_fide} / ${n_validi}  (${pct_prima}%)`);
@@ -739,7 +739,7 @@
             log(`    (incremento dovuto alla ricerca: +${diff_n} tesserati, +${diff_pct} punti percentuali)`);
 
             // Creazione CSV FINALE (NO Intestazione)
-            let csvContent = outRows.map(r => r.map(escapeCSV).join(DELIM_OUT)).join("\\n") + "\\n";
+            let csvContent = outRows.map(r => r.map(escapeCSV).join(DELIM_OUT)).join("\n") + "\n";
             
             setProgress(98);
             await yieldToMain();
@@ -752,10 +752,10 @@
             
             setProgress(100);
             downloadArea.style.display = "block";
-            log(`\\nFile generato: candidati.csv  (${outRows.length} righe)`);
+            log(`\nFile generato: candidati.csv  (${outRows.length} righe)`);
             
         } catch (err) {
-            log(`\\n[ERRORE CRITICO] Si è verificata un'eccezione: ${err.message || err.name}`);
+            log(`\n[ERRORE CRITICO] Si è verificata un'eccezione: ${err.message || err.name}`);
             console.error(err);
         } finally {
             btn.disabled = false;
@@ -764,5 +764,3 @@
 </script>
 </body>
 </html>
-    
-create_html()
