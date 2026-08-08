@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guida al Progetto: postAllIn</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h1 { color: #1e293b; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        h2 { color: var(--primary); margin-top: 2rem; }
+        h3 { color: #334155; }
+        .highlight {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .card {
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: #f8fafc;
+        }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📘 Guida a postAllIn</h1>
+    <p>Benvenuto nella documentazione di <strong>postAllIn</strong>. Questo strumento (attualmente in fase di testing) automatizza la creazione del file <code>allin.csv</code> utilizzato per la gestione dei tornei di scacchi in Italia[cite: 3].</p>
+
+    <h2>📂 1. Cos'è cosa (I File Principali)</h2>
+    <p>Il progetto "postallin-main.zip" si divide in due applicazioni web distinte ma complementari, che girano interamente all'interno del browser locale:</p>
+    
+    <div class="card">
+        <h3>1. <code>index.html</code> (Generatore postAllIn)</h3>
+        <p><strong>Cos'è:</strong> È il cuore del progetto[cite: 3].</p>
+        <p><strong>Cosa fa:</strong> Prende i database separati (FSI, Vega, FIDE), li incrocia e genera il file <code>allin.csv</code> finale pronto per l'uso[cite: 3]. È la dashboard principale che l'arbitro o l'organizzatore utilizzerà maggiormente[cite: 3].</p>
+    </div>
+
+    <div class="card">
+        <h3>2. <code>candidati.html</code> (Trova Candidati FIDE)</h3>
+        <p><strong>Cos'è:</strong> È uno strumento di supporto opzionale[cite: 3].</p>
+        <p><strong>Cosa fa:</strong> Serve a trovare potenziali abbinamenti tra giocatori italiani (ID FSI) che non hanno ancora un ID internazionale e il database mondiale FIDE[cite: 2]. Confronta i giocatori usando <em>Nome + Anno di nascita</em> per suggerire associazioni[cite: 2].</p>
+    </div>
+
+    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);">
+
+    <h2>⚙️ 2. Cosa fa cosa (Il Flusso di Lavoro)</h2>
+    <p>Entrambi gli script lavorano "a strati", arricchendo progressivamente i dati dei giocatori. Ecco come funzionano le due procedure.</p>
+
+    <h3>Flusso A: Trovare nuovi ID FIDE (tramite <code>candidati.html</code>)</h3>
+    <p>Se l'organizzatore vuole cercare ID internazionali mancanti, usa questo modulo[cite: 2]:</p>
+    <ul>
+        <li><strong>Step 1 & 2 (Filtro base):</strong> Legge l'elenco tesserati FSI e il file Vega. Isola tutti i giocatori italiani che <em>non</em> hanno un ID FIDE già registrato in Vega[cite: 2].</li>
+        <li><strong>Step 3 (Ricerca FIDE):</strong> Legge il massiccio file <code>players_list.txt</code> della FIDE. Poiché il file è enorme, usa una tecnica chiamata <em>streaming</em> (legge il file a piccoli pezzi per non bloccare il browser)[cite: 2]. Cerca corrispondenze esatte tra nome e anno di nascita[cite: 2].</li>
+        <li><strong>Step 4 (Risultato):</strong> Scarta i candidati il cui ID FIDE è già assegnato a qualcun altro e segnala le omonimie. Genera un file <code>candidati.csv</code> con i suggerimenti[cite: 2].</li>
+    </ul>
+
+    <h3>Flusso B: Generare il File allin.csv (tramite <code>index.html</code>)</h3>
+    <p>Questo è il processo di assemblaggio finale[cite: 3]:</p>
+    <ul>
+        <li><strong>Step 1 (Dati Anagrafici):</strong> Legge <code>elenco_tesserati.csv</code> per creare la base. Estrae nome, ID FSI, sesso, data di nascita, regione, provincia e società[cite: 3].</li>
+        <li><strong>Step 2 (Dati Italia):</strong> Sovrascrive o aggiunge dati leggendo <code>aaaa_mm_vega.csv</code>, aggiornando Elo Italia, Categoria e K Italia[cite: 3].</li>
+        <li><strong>Step 3 (Integrazione Candidati - Opzionale):</strong> Se viene caricato il file <code>candidati.csv</code> generato in precedenza, assegna i nuovi ID FIDE trovati, aggiungendo l'etichetta <em>"(presunto)"</em> accanto al nome del giocatore per segnalare all'arbitro che il dato non è ancora ufficiale in Vega[cite: 3].</li>
+        <li><strong>Step 4 (Dati Internazionali):</strong> Legge il file <code>players_list.txt</code> (sempre tramite streaming) per estrarre Elo Standard/Rapid/Blitz, K factor FIDE e titoli mondiali (GM, IM, ecc.)[cite: 3]. Confronta anche il sesso e l'anno di nascita FSI con quelli FIDE, segnalando eventuali discordanze nel Log[cite: 3].</li>
+        <li><strong>Output Finale:</strong> Genera il file <code>allin.csv</code> formattato correttamente con punto e virgola come separatore e offre un Log dettagliato da scaricare in caso di errori[cite: 3].</li>
+    </ul>
+
+</div>
+
+</body>
+</html>
